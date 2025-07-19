@@ -1,0 +1,26 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+public class GameManager : MonoBehaviour
+{
+    private float GameTime = 5;
+    public TextMeshProUGUI TimeText;
+
+    void Update()
+    {
+        if ((int)GameTime == 0)
+        {
+            Debug.Log("게임 종료");
+            TimeText.text = "Time: " + (int)GameTime;
+        }
+        else
+        {
+            GameTime -= Time.deltaTime;
+            Debug.Log((int)GameTime);
+            TimeText.text = "Time: " + (int)GameTime;
+        }
+    }
+}
