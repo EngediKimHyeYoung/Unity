@@ -1,0 +1,91 @@
+using UnityEngine;
+
+[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Animator))]
+public class PlayerController3 : MonoBehaviour
+{
+    [Header("Movement Settings")]
+    public float moveSpeed = 5f;            // 좌우 이동 속도
+    public float jumpForce = 7f;            // 기본 점프 힘 (점프 시작 시)
+    public float maxJumpTime = 0.3f;        // 최대 점프 유지 시간 (초)
+    public float jumpHoldForce = 5f;        // 점프 버튼을 누르고 있는 동안 추가로 주는 힘
+
+    private Animator animator;
+    private Rigidbody2D rb;
+    private bool isGrounded = true;         // 땅에 닿았는지 여부
+    private bool isJumping = false;         // 점프 중인지 여부
+    private float jumpTimeCounter;          // 점프 버튼 유지 시간 카운터
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+    }
+
+    private void Update()
+    {
+        HandleMovement();
+        HandleJump();
+    }
+
+    private void HandleMovement()
+    {
+        float move = Input.GetAxisRaw("Horizontal");
+
+        // Rigidbody2D의 x 속도만 갱신
+        Vector2 newVelocity = rb.linearVelocity;
+        newVelocity.x = move * moveSpeed;
+        rb.linearVelocity = newVelocity;
+
+        // 방향 및 달리기 애니메이션
+        if (move != 0)
+        {
+            transform.localScale = new Vector2(Mathf.Sign(move), 1);
+            animator.SetBool("RunStart", true);
+        }
+        else
+        {
+            animator.SetBool("RunStart", false);
+        }
+    }
+
+    private void HandleJump()
+    {
+        // 점프 시작 (Space 또는 UpArrow)
+        if ((Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.UpArrow)) && isGrounded)
+        {
+            isJumping = true;
+            isGrounded = false;
+            jumpTimeCounter = maxJumpTime;
+
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            animator.SetBool("JumpStart", true);
+        }
+
+        // 점프 유지 (Space 또는 UpArrow)
+        if ((Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.UpArrow)) && isJumping)
+        {
+            if (jumpTimeCounter > 0)
+            {
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+                jumpTimeCounter -= Time.deltaTime;
+            }
+        }
+
+        // 점프 중단 (Space 또는 UpArrow)
+        if (Input.GetKeyUp(KeyCode.Space) || Input.GetKeyUp(KeyCode.UpArrow))
+        {
+            isJumping = false;
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = true;
+            isJumping = false;
+            animator.SetBool("JumpStart", false);
+        }
+    }
+}
